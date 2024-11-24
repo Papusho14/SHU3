@@ -43,6 +43,48 @@ def add_data():
 #########################################################################################################################################
 #Aqui diego tiene que subir su parte
 
+from flask import Flask, jsonify, request
+from conn import conectar_bd
+from datetime import datetime
+import mysql.connector
+
+app = Flask(__name__)
+
+
+@app.route('/view', methods=['GET'])
+def get_all_data():
+    try:
+        # Conectar a la base de datos
+        conn = conectar_bd()
+        cursor = conn.cursor()
+
+        # Consultar todos los datos de la tabla
+        query = "SELECT * FROM teachers"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        # Convertir los resultados a un formato adecuado para JSON
+        teachers = []
+        for row in rows:
+            teachers.append({
+                "id": row[0],
+                "worker_id": row[1],
+                "specially": row[2],
+                "worker_name": row[3],
+                "register_date": row[4],
+                "update_name": row[5]
+            })
+
+        return jsonify(teachers), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"Error": f"Error al recuperar los datos: {str(err)}"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
 
 #########################################################################################################################################
 
