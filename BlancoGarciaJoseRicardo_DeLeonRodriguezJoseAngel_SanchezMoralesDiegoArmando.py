@@ -40,3 +40,99 @@ def add_data():
         cursor.close()
         conn.close()
 
+#########################################################################################################################################
+#Aqui diego tiene que subir su parte
+
+
+#########################################################################################################################################
+
+@app.route('/delete', methods=['DELETE'])
+def delete_data():
+    # Leer el worker_id desde el cuerpo de la solicitud
+    data = request.get_json()
+    
+    # Verificar si el worker_id fue proporcionado
+    worker_id = int(data.get('worker_id'))
+    
+    if not worker_id:
+        return jsonify({"Error": "El numero de empleado es requerido."}), 400
+
+    try:
+        # Conectar a la base de datos
+        conn = conectar_bd()
+        cursor = conn.cursor()
+
+        # Verificar si el registro existe con el worker_id
+        query_check = "SELECT * FROM teachers WHERE worker_id = %s"
+        cursor.execute(query_check, (worker_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            return jsonify({"Error": f"Registro con numero de empleado {worker_id} no encontrado."}), 404
+
+        # Eliminar el registro
+        query_delete = "DELETE FROM teachers WHERE worker_id = %s"
+        cursor.execute(query_delete, (worker_id,))
+        conn.commit()
+
+        return jsonify({"Mensaje": f"Registro con numero de empleado {worker_id} eliminado exitosamente."}), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"Error": f"Error al eliminar el dato: {str(err)}"}), 500
+
+    finally:
+            cursor.close()
+            conn.close()
+
+@app.route('/update', methods=['PUT'])
+def update_data():
+    # Leer el worker_id y los nuevos datos desde el cuerpo de la solicitud
+    data = request.get_json()
+
+    worker_id = int(data.get('worker_id'))
+    worker_name = data.get('worker_name')
+    specially = data.get('specially')
+    update_date = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+
+    # Verificar que todos los campos necesarios están presentes
+    if not worker_id:
+        return jsonify({"Error": "El numero de empleado es requerido."}), 400
+    if not worker_name or not specially or not specially or not update_date:
+        return jsonify({"Error": "Todos los campos son requeridos para la actualización."}), 400
+
+    try:
+        # Conectar a la base de datos
+        conn = conectar_bd()
+        cursor = conn.cursor()
+
+        # Verificar si el registro existe con el worker_id
+        query_check = "SELECT * FROM teachers WHERE worker_id = %s"
+        cursor.execute(query_check, (worker_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            return jsonify({"Error": f"Registro con numero de empledo {worker_id} no encontrado."}), 404
+
+        # Actualizar el registro con los nuevos datos
+        query_update = """
+            UPDATE teachers
+            SET worker_name = %s, specially = %s, update_date = %s
+            WHERE worker_id = %s
+        """
+        cursor.execute(query_update, (worker_name, specially, update_date, worker_id))
+        conn.commit()
+
+        return jsonify({"Mensaje": f"Registro con numero de empleado {worker_id} actualizado exitosamente."}), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"Error": f"Error al actualizar el dato: {str(err)}"}), 500
+
+    finally:
+        # Cerrar cursor y conexión
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+if __name__ == '__main__':
+    app.run(debug=True)
