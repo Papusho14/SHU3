@@ -42,15 +42,6 @@ def add_data():
 
 #########################################################################################################################################
 #Aqui diego tiene que subir su parte
-
-from flask import Flask, jsonify, request
-from conn import conectar_bd
-from datetime import datetime
-import mysql.connector
-
-app = Flask(__name__)
-
-
 @app.route('/view', methods=['GET'])
 def get_all_data():
     try:
